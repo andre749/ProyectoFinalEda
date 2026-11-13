@@ -3,6 +3,7 @@
 //
 #include<iostream>
 #include "HollowHeap.cpp"
+#include "PairHeap.cpp"
 using namespace std;
 void hollow_heap_basic_test() {
     HollowHeap<int,int> h;
@@ -23,7 +24,8 @@ void hollow_heap_basic_test() {
         h.delete_min();
     }
 }
-int main() {
 
+int main() {
+    hollow_heap_basic_test();
     cout<<"hello world";
 }

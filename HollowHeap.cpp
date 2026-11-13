@@ -29,11 +29,10 @@ struct HollowHeap {
         kids->next=temp;
         }
 
-
-
         bool is_hollow() {
             return !item;
         }
+
 
     };
 
@@ -190,8 +189,12 @@ struct HollowHeap {
         node->item=nullptr;
     }
 
-    void decrease_key(Node* node, Tk nk) {
-        auto new_node=new Node(nk,node->item);
+    void decrease_key(Node* node, Tk delta) {
+        if (delta<0) {
+            cout<<"Tienes que decrementar un valor positivo de la llave/n";
+            return;
+        }
+        auto new_node=new Node(node->key-delta,node->item);
         node->item=nullptr;
         auto cutting_point=node->kids;
         if (cutting_point) {
@@ -206,6 +209,7 @@ struct HollowHeap {
         }
         _insert_root(new_node);
     }
+
 
 };
 
