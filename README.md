@@ -10,6 +10,7 @@ Proyecto final para el análisis y comparación experimental de colas de priorid
 2. **Pairing Heap (`PairHeap.cpp`)**: Representación clásica *child/sibling/prev* en árbol binario con cortes y combinación en dos pasadas.
 3. **Hollow Heap Original (`HollowHeap.cpp`)**: Implementación inicial de montículo hollow con múltiples raíces.
 4. **Hollow Heap Optimizado (`HollowHeap2.cpp`)**: Reimplementación robusta y eficiente de montículos hollow (*Multi-Root 1-Parent*) basada en Hansen, Kaplan, Tarjan & Zwick (2017).
+5. **Rank-Pairing Heap (`RankPairingHeap.cpp`)**: Implementación de montículos *Rank-Pairing* (Tipo 2) basada en Haeupler, Sen & Tarjan (2011). Emplea representación en *half-trees* binarios con a lo más dos punteros por nodo interno (`left` y `right`), enlace $O(1)$, reducción de rangos en cascada con regla Tipo 2 ($O(1)$ amortizado para `decrease_key`), y consolidación por cubetas estáticas en $O(\log n)$ durante `erase_min`.
 
 ---
 
@@ -75,6 +76,10 @@ g++ -O3 -std=c++17 -Wall -Wextra test/test_fibo.cpp -o test_fibo.exe
 # Compilar y ejecutar pruebas de Hollow Heap 2
 g++ -O3 -std=c++17 -Wall -Wextra test/test_hollow2.cpp -o test_hollow2.exe
 .\test_hollow2.exe
+
+# Compilar y ejecutar pruebas de Rank-Pairing Heap
+g++ -O3 -std=c++17 -Wall -Wextra test/test_rankpairing.cpp -o test_rankpairing.exe
+.\test_rankpairing.exe
 
 # Compilar y ejecutar pruebas de auditoría sobre Hollow Heap Original
 g++ -std=c++17 -Wall -Wextra test/test_hollow_audit.cpp -o test_hollow_audit.exe
