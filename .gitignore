@@ -1,0 +1,23 @@
+# Compilados y binarios
+*.exe
+*.o
+*.obj
+*.out
+
+# Documentos locales de referencia del usuario
+fibo.md
+proyecto.md
+
+# Archivos auxiliares de LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.toc
+
+# IDEs y editores
+.vscode/
+.idea/

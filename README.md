@@ -103,3 +103,24 @@ g++ -O3 -std=c++17 -Wall -Wextra benchmarks/benchmark.cpp -o benchmark.exe
 ```
 
 Los resultados detallados de tiempos de ejecución y conteo de operaciones se exportan automáticamente en formato tabular y en `benchmarks/benchmark_results.csv`.
+
+### Generación de Gráficos:
+
+```powershell
+python benchmarks/generate_charts.py
+```
+Genera las figuras comparativas de rendimiento, conteos de `decrease-key`, factores de aceleración (*speedup*) y huella de memoria en `figures/` (formatos `.png` y `.pdf`).
+
+---
+
+## Análisis Experimental y Reporte en LaTeX
+
+El documento formal del proyecto se encuentra en `analisis_experimental.tex`, estructurado en:
+1. **Marco Teórico y Complejidades Asintóticas** (Fibonacci, Pairing, Hollow y Rank-Pairing).
+2. **Arquitectura y Representación en Memoria** (huella en bytes por nodo y análisis de punteros).
+3. **Metodología Experimental** (topologías de grafos, entorno de compilación UCRT64/GCC 15.1 y validación de corrección por checksums).
+4. **Resultados Empíricos y Tablas Comparativas** (tiempos en ms en Dijkstra y Prim).
+5. **Visualizaciones Gráficas** (figuras vectoriales de rendimiento, speedups y operaciones).
+6. **Análisis de Jerarquía de Caché (L1/L2/L3) y Patrones de Acceso** (*pointer chasing*, saturación de líneas de caché de 64 bytes y uso de *stack-allocated buckets*).
+7. **Discusión (Teoría vs. Práctica) y Conclusiones**.
+
