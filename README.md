@@ -7,10 +7,11 @@ Proyecto final para el análisis y comparación experimental de colas de priorid
 ## Estructuras Implementadas
 
 1. **Fibonacci Heap (`FibonacciHeap.cpp`)**: Implementación basada en Fredman & Tarjan (1987) y la especificación de `fibo.md`. Utiliza listas doblemente enlazadas circulares, cortes en cascada, verificación de invariantes y consolidación eficiente mediante arreglo estático en memoria de pila.
-2. **Pairing Heap (`PairHeap.cpp`)**: Representación clásica *child/sibling/prev* en árbol binario con cortes y combinación en dos pasadas.
-3. **Hollow Heap Original (`HollowHeap.cpp`)**: Implementación inicial de montículo hollow con múltiples raíces.
-4. **Hollow Heap Optimizado (`HollowHeap2.cpp`)**: Reimplementación robusta y eficiente de montículos hollow (*Multi-Root 1-Parent*) basada en Hansen, Kaplan, Tarjan & Zwick (2017).
-5. **Rank-Pairing Heap (`RankPairingHeap.cpp`)**: Implementación de montículos *Rank-Pairing* (Tipo 2) basada en Haeupler, Sen & Tarjan (2011). Emplea representación en *half-trees* binarios con a lo más dos punteros por nodo interno (`left` y `right`), enlace $O(1)$, reducción de rangos en cascada con regla Tipo 2 ($O(1)$ amortizado para `decrease_key`), y consolidación por cubetas estáticas en $O(\log n)$ durante `erase_min`.
+2. **Pairing Heap Original (`PairHeap.cpp`)**: Representación clásica *child/sibling/prev* en árbol binario con cortes y combinación en dos pasadas.
+3. **Pairing Heap Optimizado (`PairHeap2.cpp`)**: Implementación corregida y estandarizada con la interfaz unificada del proyecto (`decrease_key(Node* x, Tk new_key)` en lugar de delta, corrección de puntero nulo en raíz tras `erase`, validación de invariantes y semántica de movimiento).
+4. **Hollow Heap Original (`HollowHeap.cpp`)**: Implementación inicial de montículo hollow con múltiples raíces.
+5. **Hollow Heap Optimizado (`HollowHeap2.cpp`)**: Reimplementación robusta y eficiente de montículos hollow (*Multi-Root 1-Parent*) basada en Hansen, Kaplan, Tarjan & Zwick (2017).
+6. **Rank-Pairing Heap (`RankPairingHeap.cpp`)**: Implementación de montículos *Rank-Pairing* (Tipo 2) basada en Haeupler, Sen & Tarjan (2011). Emplea representación en *half-trees* binarios con a lo más dos punteros por nodo interno (`left` y `right`), enlace $O(1)$, reducción de rangos en cascada con regla Tipo 2 ($O(1)$ amortizado para `decrease_key`), y consolidación por cubetas estáticas en $O(\log n)$ durante `erase_min`.
 
 ---
 
@@ -47,24 +48,15 @@ Durante la auditoría teórica y empírica del archivo `HollowHeap.cpp`, se iden
 
 ---
 
-## Soluciones implementadas en `HollowHeap2.cpp`
+## Soluciones implementadas en `HollowHeap2.cpp` y `PairHeap2.cpp`
 
-Para resolver todas las limitaciones anteriores y homogeneizar la estructura con `FibonacciHeap` y `PairHeap`, se implementó `HollowHeap2.cpp` con las siguientes mejoras arquitectónicas:
-
-| Aspecto | `HollowHeap.cpp` (Original) | `HollowHeap2.cpp` (Optimizado) |
-| :--- | :--- | :--- |
-| **Punteros y representación** | Envoltorio externo `List<Node>*` en raíces e hijos. | Punteros intrínsecos `child` y `next` directamente en cada `DagNode`. |
-| **Manejo de identificadores en `decrease_key`** | Puntero `Node*` directo que se vuelve nulo; falla en múltiples decrementos. | Manejador desacoplado `Node` (item) que actualiza transparentemente su puntero al nodo activo `DagNode*`. Soporta múltiples `decrease_key` consecutivos. |
-| **Operación `meld`** | Falla con *segfault* si uno de los heaps está vacío. | Fusión circular en tiempo $O(1)$ seguro contra heaps vacíos. |
-| **Limpieza de raíces huecas** | Bucle incompleto con creación dinámica de instancias `HollowHeap`. | Recolección iterativa completa en arreglo de raíces: libera memoria (`delete`) de todo nodo *hollow* y asciende a sus hijos directamente. |
-| **Consolidación por rangos** | Inserción recursiva en `vector` dinámico; evalúa `capacity()`. | Arreglo estático en memoria de pila `std::array<DagNode*, 128>` en $O(\log n)$ amortizado sin asignaciones dinámicas. |
-| **Eliminación arbitraria (`erase`)** | Incompleta o destructiva sobre el mínimo. | Eliminación perezosa formal en $O(1)$ para nodos internos; delega a `erase_min` si es la raíz mínima. |
-| **Gestión de memoria (RAII)** | Sin destructor; múltiples fugas de memoria. | Destructor `~HollowHeap2()` y método `clear()` iterativo con liberación exhaustiva y cero fugas. |
-| **Validación de invariantes** | No disponible. | Método `validate_invariants()` que verifica el árbol, consistencia de punteros y propiedad min-heap. |
+Para resolver todas las limitaciones anteriores y homogeneizar las estructuras:
+* **`HollowHeap2.cpp`**: Punteros intrínsecos `child`/`next`, separación entre `Node` (item) y `DagNode` para soportar múltiples `decrease_key` consecutivos sin perder identidad, arreglo estático en pila para enlazado por rangos y desmantelamiento exhaustivo de nodos huecos con RAII.
+* **`PairHeap2.cpp`**: Adopción de la firma estándar `decrease_key(Node* x, Tk new_key)` en lugar de delta, corrección de puntero colgante en `root->prev` tras `erase()`, métodos auxiliares de consulta (`min_key()`, `get_min()`, `min_node()`, `extract_min()`) y validación de invariantes.
 
 ---
 
-## Ejecución de Pruebas
+## Ejecución de Pruebas Unitarias
 
 Las pruebas unitarias y de estrés se encuentran organizadas en el directorio `test/`:
 
@@ -76,6 +68,10 @@ g++ -O3 -std=c++17 -Wall -Wextra test/test_fibo.cpp -o test_fibo.exe
 # Compilar y ejecutar pruebas de Hollow Heap 2
 g++ -O3 -std=c++17 -Wall -Wextra test/test_hollow2.cpp -o test_hollow2.exe
 .\test_hollow2.exe
+
+# Compilar y ejecutar pruebas de Pairing Heap 2
+g++ -O3 -std=c++17 -Wall -Wextra test/test_pairheap.cpp -o test_pairheap.exe
+.\test_pairheap.exe
 
 # Compilar y ejecutar pruebas de Rank-Pairing Heap
 g++ -O3 -std=c++17 -Wall -Wextra test/test_rankpairing.cpp -o test_rankpairing.exe
@@ -89,3 +85,21 @@ g++ -std=c++17 -Wall -Wextra test/test_hollow_audit.cpp -o test_hollow_audit.exe
 g++ -std=c++17 -Wall -Wextra Heaps.cpp -o Heaps.exe
 .\Heaps.exe
 ```
+
+---
+
+## Benchmarks Experimentales (Dijkstra y Prim)
+
+El directorio `benchmarks/` contiene la suite de benchmarking que evalúa las cuatro estructuras sobre algoritmos de grafos (Dijkstra y Prim) bajo distintas topologías de red:
+* **Grafos Conexos Dispersos** ($|V| \in [5k, 50k]$, $|E| \in [25k, 375k]$)
+* **Grafos Densos** ($|V| \in [1k, 2k]$, densidad hasta 25%, $|E| \approx 500k$)
+* **Mallas Regulares 2D (Grid Graphs)** ($100 \times 100$, $200 \times 200$)
+
+### Cómo ejecutar los benchmarks:
+
+```powershell
+g++ -O3 -std=c++17 -Wall -Wextra benchmarks/benchmark.cpp -o benchmark.exe
+.\benchmark.exe
+```
+
+Los resultados detallados de tiempos de ejecución y conteo de operaciones se exportan automáticamente en formato tabular y en `benchmarks/benchmark_results.csv`.
