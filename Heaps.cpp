@@ -7,6 +7,7 @@
 #include "FibonacciHeap.cpp"
 #include "HollowHeap2.cpp"
 #include "RankPairingHeap.cpp"
+#include "PairHeap2.cpp"
 using namespace std;
 
 void hollow_heap_basic_test() {
@@ -83,11 +84,30 @@ void rank_pairing_heap_basic_test() {
     }
 }
 
+void pair_heap2_basic_test() {
+    cout << "\n--- Pairing Heap 2 Test ---" << endl;
+    PairHeap2<int, int> ph;
+    int a[20];
+    PairHeap2<int, int>::Node* ptrs[20];
+    for (int i = 19; i >= 0; i--) {
+        a[i] = i;
+        ptrs[i] = ph.insert(i, &a[i]);
+    }
+    ph.erase(ptrs[0]);
+    ph.erase(ptrs[15]);
+
+    while (!ph.empty()) {
+        cout << *ph.find_min() << endl;
+        ph.erase_min();
+    }
+}
+
 int main() {
     cout << "--- Hollow Heap (Original) Test ---" << endl;
     hollow_heap_basic_test();
     fibonacci_heap_basic_test();
     hollow_heap2_basic_test();
     rank_pairing_heap_basic_test();
+    pair_heap2_basic_test();
     cout << "\nAll heap basic tests finished successfully." << endl;
 }
