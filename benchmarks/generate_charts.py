@@ -19,15 +19,15 @@ with open(csv_path, 'r') as f:
 # Color palette (colorblind-friendly)
 COLORS = {
     'Fibonacci': '#4477AA',
-    'Hollow 2': '#CC6677',
-    'Pairing 2': '#228B22',
+    'Hollow': '#CC6677',
+    'Pairing': '#228B22',
     'Rank-Pairing': '#EE7733',
 }
-HEAPS = ['Fibonacci', 'Hollow 2', 'Pairing 2', 'Rank-Pairing']
+HEAPS = ['Fibonacci', 'Hollow', 'Pairing', 'Rank-Pairing']
 COL_MAP = {
     'Fibonacci': 'FibonacciHeap_ms',
-    'Hollow 2': 'HollowHeap2_ms',
-    'Pairing 2': 'PairHeap2_ms',
+    'Hollow': 'HollowHeap_ms',
+    'Pairing': 'PairHeap_ms',
     'Rank-Pairing': 'RankPairingHeap_ms',
 }
 
@@ -162,15 +162,14 @@ plt.close(fig)
 print("Chart 4: dijkstra_dense OK")
 
 # ============================================================
-# Chart 5: Speedup relativo vs Fibonacci Heap (radar/heatmap style)
+# Chart 5: Speedup relativo vs Fibonacci Heap
 # ============================================================
-# Grouped bar: speedup of each heap vs Fibonacci on all instances
 all_labels = [f"{r['Algorithm']}\n{r['GraphType']}" for r in rows]
 x5 = np.arange(len(all_labels))
 
 fig, ax = plt.subplots(figsize=(14, 5.5))
 bar_w5 = 0.22
-for i, heap in enumerate(['Hollow 2', 'Pairing 2', 'Rank-Pairing']):
+for i, heap in enumerate(['Hollow', 'Pairing', 'Rank-Pairing']):
     speedups = [float(r['FibonacciHeap_ms']) / float(r[COL_MAP[heap]]) for r in rows]
     bars = ax.bar(x5 + i * bar_w5, speedups, bar_w5, label=heap, color=COLORS[heap], edgecolor='black', linewidth=0.4)
     for bar, v in zip(bars, speedups):
@@ -195,8 +194,8 @@ print("Chart 5: speedup_vs_fibonacci OK")
 # ============================================================
 dk_cols = {
     'Fibonacci': 'DecKeys_Fib',
-    'Hollow 2': 'DecKeys_Hollow2',
-    'Pairing 2': 'DecKeys_Pair2',
+    'Hollow': 'DecKeys_Hollow',
+    'Pairing': 'DecKeys_Pair',
     'Rank-Pairing': 'DecKeys_RP',
 }
 dk_labels = [f"{r['Algorithm']}\n{r['GraphType']}" for r in rows]
@@ -223,9 +222,9 @@ print("Chart 6: decrease_key_counts OK")
 # ============================================================
 # Chart 7: Memory footprint comparison (theoretical, per node)
 # ============================================================
-structs = ['Fibonacci\nHeap', 'Pairing\nHeap 2', 'Rank-Pairing\nHeap', 'Hollow\nHeap 2']
-sizes = [64, 40, 48, 64]  # 24 + 40 for HollowHeap2
-colors_mem = [COLORS['Fibonacci'], COLORS['Pairing 2'], COLORS['Rank-Pairing'], COLORS['Hollow 2']]
+structs = ['Fibonacci\nHeap', 'Pairing\nHeap', 'Rank-Pairing\nHeap', 'Hollow\nHeap']
+sizes = [64, 40, 48, 64]  # 24 + 40 for HollowHeap
+colors_mem = [COLORS['Fibonacci'], COLORS['Pairing'], COLORS['Rank-Pairing'], COLORS['Hollow']]
 
 fig, ax = plt.subplots(figsize=(7, 4.5))
 bars = ax.bar(structs, sizes, color=colors_mem, edgecolor='black', linewidth=0.5, width=0.55)
@@ -233,7 +232,6 @@ for bar, v in zip(bars, sizes):
     label = f'{v} B' if v != 64 or bar == bars[0] else '24+40 B'
     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
             label, ha='center', va='bottom', fontsize=11, fontweight='bold')
-# Fix HollowHeap2 label
 ax.texts[-1].set_text('24+40 B')
 
 ax.axhline(y=64, color='red', linestyle=':', linewidth=1, alpha=0.5, label='Tamaño línea L1 (64 B)')

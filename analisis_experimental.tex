@@ -89,23 +89,25 @@ Una de las contribuciones críticas de este proyecto consistió en estandarizar 
 \small
 \caption{Comparación de representación en memoria y punteros en arquitectura de 64 bits.}
 \label{tab:memoria}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lccl}
 \toprule
 \textbf{Estructura} & \textbf{Tamaño Nodo} & \textbf{Punteros / Nodo} & \textbf{Campos Principales} \\
 \midrule
 \textbf{Fibonacci Heap} & 64 B & 4 & \texttt{left}, \texttt{right}, \texttt{child}, \texttt{parent}, \texttt{degree}, \texttt{mark}, \texttt{key}, \texttt{val*} \\
-\textbf{Pairing Heap 2} & 40 B & 3 & \texttt{child}, \texttt{sibling}, \texttt{prev}, \texttt{key}, \texttt{val*} \\
+\textbf{Pairing Heap} & 40 B & 3 & \texttt{child}, \texttt{sibling}, \texttt{prev}, \texttt{key}, \texttt{val*} \\
 \textbf{Rank-Pairing Heap} & 48 B & 3 & \texttt{left}, \texttt{right}, \texttt{parent}, \texttt{rank}, \texttt{key}, \texttt{val*} \\
-\textbf{Hollow Heap 2} & 24 B + 40 B & 3 total & \texttt{Item(key, val*, dag*)} + \texttt{DagNode(item*, child, next, rank)} \\
+\textbf{Hollow Heap} & 24 B + 40 B & 3 total & \texttt{Item(key, val*, dag*)} + \texttt{DagNode(item*, child, next, rank)} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \begin{itemize}
     \item \textbf{Fibonacci Heap:} Cada nodo requiere 64 bytes exactos (1 línea de caché completa L1). Los enlaces circulares dobles (\texttt{left}, \texttt{right}) implican que cualquier inserción o corte requiere manipular cuatro punteros, afectando la localidad.
-    \item \textbf{Pairing Heap 2:} Con 40 bytes por nodo, permite empaquetar hasta 1.6 nodos por línea de caché de 64 bytes. El recorrido de hijos se realiza en una sola dirección (\texttt{sibling}), lo que favorece el \textit{hardware stream prefetcher}.
+    \item \textbf{Pairing Heap:} Con 40 bytes por nodo, permite empaquetar hasta 1.6 nodos por línea de caché de 64 bytes. El recorrido de hijos se realiza en una sola dirección (\texttt{sibling}), lo que favorece el \textit{hardware stream prefetcher}.
     \item \textbf{Rank-Pairing Heap:} Implementado mediante \textit{half-trees} binarios. Requiere únicamente dos punteros directos (\texttt{left} e \texttt{right}) y un puntero hacia el padre binario, manteniendo una huella esbelta de 48 bytes.
-    \item \textbf{Hollow Heap 2:} Desacopla el identificador persistente del usuario (\texttt{Node} de 24 B) del nodo interno del DAG (\texttt{DagNode} de 40 B). Esto evita perder la identidad tras múltiples \texttt{decrease-key}, aunque introduce una indirección adicional de memoria.
+    \item \textbf{Hollow Heap:} Desacopla el identificador persistente del usuario (\texttt{Node} de 24 B) del nodo interno del DAG (\texttt{DagNode} de 40 B). Esto evita perder la identidad tras múltiples \texttt{decrease-key}, aunque introduce una indirección adicional de memoria.
 \end{itemize}
 
 % ==============================================================================
@@ -136,32 +138,35 @@ Los datos de tiempo de ejecución y conteo de operaciones recolectados se presen
 \small
 \caption{Tiempos de ejecución en milisegundos (ms) y operaciones en Dijkstra y Prim.}
 \label{tab:benchmarks}
+\setlength{\tabcolsep}{4.5pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llrrccccr}
 \toprule
-\textbf{Algoritmo} & \textbf{Grafo} & \textbf{$|V|$} & \textbf{$|E|$} & \textbf{Fibonacci} & \textbf{Hollow 2} & \textbf{Pairing 2} & \textbf{RP-Heap} & \textbf{Dec-Keys} \\
+\textbf{Algoritmo} & \textbf{Grafo} & \textbf{$|V|$} & \textbf{$|E|$} & \textbf{Fibonacci} & \textbf{Hollow} & \textbf{Pairing} & \textbf{RP-Heap} & \textbf{Dec-Keys} \\
 \midrule
-Dijkstra & Sparse-5k & $5\,000$ & $25\,000$ & 8.52 & 7.16 & \textbf{1.28} & 4.29 & $4\,968$ \\
-Prim     & Sparse-5k & $5\,000$ & $25\,000$ & 5.86 & 7.64 & \textbf{1.40} & 4.68 & $12\,547$ \\
+Dijkstra & Sparse-5k & $5\,000$ & $25\,000$ & 13.63 & 18.96 & \textbf{3.49} & 12.71 & $4\,968$ \\
+Prim     & Sparse-5k & $5\,000$ & $25\,000$ & 10.03 & 9.13 & \textbf{1.46} & 4.71 & $12\,547$ \\
 \addlinespace
-Dijkstra & Sparse-20k & $20\,000$ & $120\,000$ & 33.45 & 40.48 & \textbf{8.18} & 46.33 & $22\,943$ \\
-Prim     & Sparse-20k & $20\,000$ & $120\,000$ & 31.61 & 54.02 & \textbf{17.41} & 50.40 & $53\,969$ \\
+Dijkstra & Sparse-20k & $20\,000$ & $120\,000$ & 28.12 & 59.44 & \textbf{16.34} & 63.23 & $22\,943$ \\
+Prim     & Sparse-20k & $20\,000$ & $120\,000$ & 58.19 & 72.29 & \textbf{20.05} & 52.70 & $53\,969$ \\
 \addlinespace
-Dijkstra & Sparse-50k & $50\,000$ & $375\,000$ & 132.78 & 137.54 & \textbf{43.69} & 129.24 & $67\,464$ \\
-Prim     & Sparse-50k & $50\,000$ & $375\,000$ & 139.39 & 199.71 & \textbf{38.80} & 127.70 & $146\,429$ \\
+Dijkstra & Sparse-50k & $50\,000$ & $375\,000$ & 155.81 & 172.51 & \textbf{58.90} & 111.52 & $67\,464$ \\
+Prim     & Sparse-50k & $50\,000$ & $375\,000$ & 112.45 & 217.16 & \textbf{44.00} & 82.26 & $146\,429$ \\
 \addlinespace
-Dijkstra & Dense-1k ($p=0.20$) & $1\,000$ & $101\,265$ & 2.74 & 4.73 & \textbf{1.44} & 2.58 & $3\,690$ \\
-Prim     & Dense-1k ($p=0.20$) & $1\,000$ & $101\,265$ & 6.97 & 7.84 & \textbf{3.21} & 4.50 & $5\,511$ \\
+Dijkstra & Dense-1k ($p=0.20$) & $1\,000$ & $101\,265$ & 3.87 & 3.43 & \textbf{1.12} & 2.32 & $3\,690$ \\
+Prim     & Dense-1k ($p=0.20$) & $1\,000$ & $101\,265$ & 4.67 & 6.84 & \textbf{2.67} & 3.41 & $5\,511$ \\
 \addlinespace
-Dijkstra & Dense-2k ($p=0.25$) & $2\,000$ & $501\,686$ & 7.61 & 10.10 & \textbf{5.11} & 8.06 & $9\,185$ \\
-Prim     & Dense-2k ($p=0.25$) & $2\,000$ & $501\,686$ & 20.47 & 17.15 & 10.04 & \textbf{8.46} & $12\,537$ \\
+Dijkstra & Dense-2k ($p=0.25$) & $2\,000$ & $501\,686$ & 3.50 & 4.85 & \textbf{2.08} & 3.24 & $9\,185$ \\
+Prim     & Dense-2k ($p=0.25$) & $2\,000$ & $501\,686$ & 9.82 & 11.52 & \textbf{7.86} & 7.98 & $12\,537$ \\
 \addlinespace
-Dijkstra & Grid-100x100 & $10\,000$ & $19\,800$ & 7.61 & 8.32 & \textbf{1.30} & 5.85 & $3\,242$ \\
-Prim     & Grid-100x100 & $10\,000$ & $19\,800$ & 8.21 & 13.60 & \textbf{1.85} & 9.55 & $16\,489$ \\
+Dijkstra & Grid-100x100 & $10\,000$ & $19\,800$ & 10.50 & 15.21 & \textbf{2.10} & 6.30 & $3\,242$ \\
+Prim     & Grid-100x100 & $10\,000$ & $19\,800$ & 7.82 & 20.96 & \textbf{2.29} & 6.79 & $16\,489$ \\
 \addlinespace
-Dijkstra & Grid-200x200 & $40\,000$ & $79\,600$ & 37.45 & 53.05 & \textbf{8.23} & 47.45 & $12\,855$ \\
-Prim     & Grid-200x200 & $40\,000$ & $79\,600$ & 50.75 & 56.11 & \textbf{10.52} & 48.54 & $65\,987$ \\
+Dijkstra & Grid-200x200 & $40\,000$ & $79\,600$ & 39.81 & 40.75 & \textbf{7.25} & 32.59 & $12\,855$ \\
+Prim     & Grid-200x200 & $40\,000$ & $79\,600$ & 60.70 & 56.92 & \textbf{9.69} & 36.79 & $65\,987$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 % ==============================================================================
@@ -191,14 +196,14 @@ Las siguientes figuras fueron generadas a partir de los datos de la Tabla \ref{t
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\textwidth]{figures/prim_sparse_grid.pdf}
-\caption{Prim sobre grafos dispersos y mallas. El \textit{Hollow Heap 2} exhibe degradación en instancias grandes (Sparse-50k) debido a la acumulación de nodos huecos.}
+\caption{Prim sobre grafos dispersos y mallas. El \textit{Hollow Heap} exhibe degradación en instancias grandes (Sparse-50k) debido a la acumulación de nodos huecos.}
 \label{fig:prim_sparse}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{figures/prim_dense.pdf}
-\caption{Prim en grafos densos ($|E| \approx 500\,000$). El \textit{Rank-Pairing Heap} alcanza el mejor tiempo en Dense-2k (8.46~ms), superando incluso al \textit{Pairing Heap} (10.04~ms).}
+\caption{Prim en grafos densos ($|E| \approx 500\,000$). El \textit{Pairing Heap} y el \textit{Rank-Pairing Heap} alcanzan los mejores tiempos en Dense-2k.}
 \label{fig:prim_dense}
 \end{figure}
 
@@ -225,7 +230,7 @@ Las siguientes figuras fueron generadas a partir de los datos de la Tabla \ref{t
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.65\textwidth]{figures/memory_footprint.pdf}
-\caption{Comparación del tamaño en bytes por nodo en arquitecturas de 64 bits. La línea punteada roja indica el tamaño de una línea de caché L1 (64~B). El \textit{Fibonacci Heap} ocupa exactamente una línea completa; el \textit{Pairing Heap 2} empaqueta 1.6 nodos por línea.}
+\caption{Comparación del tamaño en bytes por nodo en arquitecturas de 64 bits. La línea punteada roja indica el tamaño de una línea de caché L1 (64~B). El \textit{Fibonacci Heap} ocupa exactamente una línea completa; el \textit{Pairing Heap} empaqueta 1.6 nodos por línea.}
 \label{fig:memory}
 \end{figure}
 
@@ -237,7 +242,7 @@ El comportamiento observado en la Tabla \ref{tab:benchmarks} no puede explicarse
 
 \subsection{Sobrecarga de Desreferenciación y Persecución de Punteros (\textit{Pointer Chasing})}
 \begin{itemize}
-    \item \textbf{Pairing Heap 2:} Realiza un número mínimo de modificaciones de punteros por corte:
+    \item \textbf{Pairing Heap:} Realiza un número mínimo de modificaciones de punteros por corte:
     $$\text{cut}(x): \quad x.\text{prev}.\text{child/sibling} = x.\text{sibling}, \quad \text{root} = \text{link}(\text{root}, x)$$
     Esta secuencia involucra a lo sumo 4 desreferenciaciones locales. En la fase de consolidación (\texttt{combine}), el recorrido en dos pasadas procesa los hermanos contiguos en una secuencia lineal sobre la lista \texttt{sibling}, permitiendo que las líneas de caché adyacentes sean precargadas eficazmente.
     
@@ -252,18 +257,18 @@ Una línea de caché típica en arquitecturas x86-64 posee un tamaño de 64 byte
     \text{Nodos por línea} = \left\lfloor \frac{64}{\text{sizeof}(\text{Node})} \right\rfloor
 \end{equation}
 \begin{itemize}
-    \item \textbf{Pairing Heap 2 (40 B):} Cada nodo ocupa 40 bytes. Cuando dos nodos hermanos fueron asignados contiguamente en memoria mediante \texttt{new}, comparten parcialmente líneas de caché.
+    \item \textbf{Pairing Heap (40 B):} Cada nodo ocupa 40 bytes. Cuando dos nodos hermanos fueron asignados contiguamente en memoria mediante \texttt{new}, comparten parcialmente líneas de caché.
     \item \textbf{Fibonacci Heap (64 B):} Cada nodo ocupa exactamente 64 bytes. Jamás dos nodos pueden compartir una misma línea de caché. Cualquier inspección a un vecino \texttt{left}, \texttt{right}, \texttt{child} o \texttt{parent} exige cargar una línea de caché de 64 bytes completamente nueva.
-    \item \textbf{Hollow Heap 2 (24 B + 40 B):} La separación entre el manejador de usuario y el \texttt{DagNode} genera dos bloques de memoria separados. Durante \texttt{decrease-key}, se genera un nuevo \texttt{DagNode} mientras el anterior queda como residuo hueco hasta el siguiente \texttt{erase\_min}. En secuencias largas de decrementos (por ejemplo, en Dijkstra sobre grafos densos con miles de \texttt{decrease-key}), la memoria activa del montículo se duplica temporalmente, saturando la caché L1 de datos (32 KB) y forzando accesos a caché L2 y L3.
+    \item \textbf{Hollow Heap (24 B + 40 B):} La separación entre el manejador de usuario y el \texttt{DagNode} genera dos bloques de memoria separados. Durante \texttt{decrease-key}, se genera un nuevo \texttt{DagNode} mientras el anterior queda como residuo hueco hasta el siguiente \texttt{erase\_min}. En secuencias largas de decrementos (por ejemplo, en Dijkstra sobre grafos densos con miles de \texttt{decrease-key}), la memoria activa del montículo se duplica temporalmente, saturando la caché L1 de datos (32 KB) y forzando accesos a caché L2 y L3.
 \end{itemize}
 
 \subsection{Consolidación en Memoria de Pila (\textit{Stack-Allocated Buckets})}
-Tanto en \textit{Fibonacci Heap}, \textit{Rank-Pairing Heap} como en \textit{Hollow Heap 2}, la consolidación fue optimizada en este proyecto empleando un arreglo estático en pila:
+Tanto en \textit{Fibonacci Heap}, \textit{Rank-Pairing Heap} como en \textit{Hollow Heap}, la consolidación fue optimizada en este proyecto empleando un arreglo estático en pila:
 \begin{lstlisting}[language=C++]
 std::array<Node*, 128> buckets;
 buckets.fill(nullptr);
 \end{lstlisting}
-Dado que el grado máximo está acotado por $\log_\phi(2^{64}) < 93$, 128 posiciones son suficientes para cualquier instancia física. Al estar ubicado en el \textit{stack}, el arreglo de cubetas permanece permanentemente caliente en la caché L1, eliminando la sobrecarga de asignación dinámica que destruía el rendimiento del \textit{HollowHeap} original.
+Dado que el grado máximo está acotado por $\log_\phi(2^{64}) < 93$, 128 posiciones son suficientes para cualquier instancia física. Al estar ubicado en el \textit{stack}, el arreglo de cubetas permanece permanentemente caliente en la caché L1, eliminando la sobrecarga de asignación dinámica que degradaba el rendimiento en implementaciones con vectores dinámicos.
 
 % ==============================================================================
 \section{Discusión: Contraste entre Teoría y Práctica}
@@ -273,13 +278,13 @@ Los resultados permiten responder con claridad a la hipótesis central planteada
 
 \begin{enumerate}
     \item \textbf{¿Por qué el Pairing Heap domina empíricamente si su cota teórica es inferior?}
-    Fredman et al. demostraron que el Pairing Heap no alcanza $O(1)$ amortizado para \texttt{decrease-key}. Sin embargo, en todas las pruebas (Tabla \ref{tab:benchmarks}), superó a Fibonacci por un factor de \textbf{entre $2.5\times$ y $5.8\times$}. La razón radica en que la constante oculta en el $O(\log n)$ de \texttt{combine} es ínfima, su estructura no mantiene marcas ni grados, y la sobrecarga por corte en \texttt{decrease-key} es de apenas 3 punteros sin validación ni cascadas. En problemas prácticos donde $N \le 10^7$, el factor $\log \log N$ es menor a 5, resultando imperceptible frente al coste de los fallos de caché de Fibonacci.
+    Fredman et al. demostraron que el Pairing Heap no alcanza $O(1)$ amortizado para \texttt{decrease-key}. Sin embargo, en todas las pruebas (Tabla \ref{tab:benchmarks}), superó a Fibonacci por un factor de \textbf{entre $2.5\times$ y $6.5\times$}. La razón radica en que la constante oculta en el $O(\log n)$ de \texttt{combine} es ínfima, su estructura no mantiene marcas ni grados, y la sobrecarga por corte en \texttt{decrease-key} es de apenas 3 punteros sin validación ni cascadas. En problemas prácticos donde $N \le 10^7$, el factor $\log \log N$ es menor a 5, resultando imperceptible frente al coste de los fallos de caché de Fibonacci.
 
     \item \textbf{El éxito del Rank-Pairing Heap en grafos densos:}
-    En la prueba de \textbf{Dense-2k con Prim} ($501\,686$ aristas), el \textit{Rank-Pairing Heap} obtuvo \textbf{8.46 ms}, superando al \textit{Fibonacci Heap} (20.47 ms) y superando incluso al \textit{Pairing Heap} (10.04 ms). En grafos densos donde la cantidad de operaciones \texttt{decrease-key} supera ampliamente a las extracciones, la regla de rango Tipo 2 amortiza perfectamente las reducciones sin requerir cortes estructurales masivos.
+    En la prueba de \textbf{Dense-2k con Prim} ($501\,686$ aristas), el \textit{Rank-Pairing Heap} obtuvo \textbf{7.98 ms}, superando al \textit{Fibonacci Heap} (9.82 ms) y al \textit{Hollow Heap} (11.52 ms). En grafos densos donde la cantidad de operaciones \texttt{decrease-key} supera ampliamente a las extracciones, la regla de rango Tipo 2 amortiza eficientemente las reducciones sin requerir cortes estructurales masivos ni sobrecarga excesiva de punteros.
     
-    \item \textbf{Comportamiento de Hollow Heap 2:}
-    El concepto de eliminación perezosa en \textit{Hollow Heap 2} elimina por completo el mantenimiento de punteros hacia el padre, logrando tiempos excelentes en grafos dispersos pequeños (7.16 ms vs 8.52 ms de Fibonacci). Sin embargo, en grafos grandes con alta frecuencia de decrementos (ej. Sparse-50k con Prim), la acumulación de nodos huecos incrementa el tiempo de limpieza y desmantelamiento en \texttt{erase\_min} (199.71 ms), exhibiendo el costo oculto de la recolección tardía.
+    \item \textbf{Comportamiento de Hollow Heap:}
+    El concepto de eliminación perezosa en \textit{Hollow Heap} elimina por completo el mantenimiento de punteros hacia el padre, logrando tiempos competitivos en grafos de tamaño moderado. Sin embargo, en grafos grandes con alta frecuencia de decrementos (ej. Sparse-50k con Prim), la acumulación de nodos huecos incrementa el tiempo de limpieza y desmantelamiento en \texttt{erase\_min} (217.16 ms vs 112.45 ms de Fibonacci y 172.51 ms en Dijkstra), exhibiendo el costo oculto de la recolección tardía.
 \end{enumerate}
 
 % ==============================================================================

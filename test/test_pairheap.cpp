@@ -4,11 +4,11 @@
 #include <random>
 #include <cassert>
 #include <algorithm>
-#include "../PairHeap2.cpp"
+#include "../PairHeap.cpp"
 
 void test_basic() {
-    std::cout << "[Test PairHeap2] Basic operations..." << std::endl;
-    PairHeap2<int, int> h;
+    std::cout << "[Test PairHeap] Basic operations..." << std::endl;
+    PairHeap<int, int> h;
     assert(h.empty());
     assert(h.size() == 0);
     assert(h.find_min() == nullptr);
@@ -59,12 +59,12 @@ void test_basic() {
     // Extract on empty returns nullptr
     assert(h.erase_min() == nullptr);
 
-    std::cout << "[Test PairHeap2] Basic operations PASSED!" << std::endl;
+    std::cout << "[Test PairHeap] Basic operations PASSED!" << std::endl;
 }
 
 void test_meld() {
-    std::cout << "[Test PairHeap2] Meld operations..." << std::endl;
-    PairHeap2<int, int> h1, h2;
+    std::cout << "[Test PairHeap] Meld operations..." << std::endl;
+    PairHeap<int, int> h1, h2;
     int a = 15, b = 25, c = 5, d = 30;
     h1.insert(15, &a);
     h1.insert(25, &b);
@@ -89,15 +89,15 @@ void test_meld() {
     std::vector<int> expected = {5, 15, 25, 30};
     assert(extracted == expected);
 
-    std::cout << "[Test PairHeap2] Meld operations PASSED!" << std::endl;
+    std::cout << "[Test PairHeap] Meld operations PASSED!" << std::endl;
 }
 
 void test_decrease_key() {
-    std::cout << "[Test PairHeap2] Decrease key operations..." << std::endl;
-    PairHeap2<int, int> h;
+    std::cout << "[Test PairHeap] Decrease key operations..." << std::endl;
+    PairHeap<int, int> h;
     const int N = 20;
     std::vector<int> vals(N);
-    std::vector<PairHeap2<int, int>::Node*> nodes(N);
+    std::vector<PairHeap<int, int>::Node*> nodes(N);
 
     for (int i = 0; i < N; ++i) {
         vals[i] = i * 10;
@@ -131,15 +131,15 @@ void test_decrease_key() {
     }
     assert(threw);
 
-    std::cout << "[Test PairHeap2] Decrease key PASSED!" << std::endl;
+    std::cout << "[Test PairHeap] Decrease key PASSED!" << std::endl;
 }
 
 void test_erase_arbitrary() {
-    std::cout << "[Test PairHeap2] Erase arbitrary nodes..." << std::endl;
-    PairHeap2<int, int> h;
+    std::cout << "[Test PairHeap] Erase arbitrary nodes..." << std::endl;
+    PairHeap<int, int> h;
     const int N = 30;
     std::vector<int> vals(N);
-    std::vector<PairHeap2<int, int>::Node*> nodes(N);
+    std::vector<PairHeap<int, int>::Node*> nodes(N);
 
     for (int i = 0; i < N; ++i) {
         vals[i] = i * 10;
@@ -166,20 +166,20 @@ void test_erase_arbitrary() {
         assert(h.validate_invariants());
     }
 
-    std::cout << "[Test PairHeap2] Erase arbitrary nodes PASSED!" << std::endl;
+    std::cout << "[Test PairHeap] Erase arbitrary nodes PASSED!" << std::endl;
 }
 
 void test_random_stress_unique_keys() {
-    std::cout << "[Test PairHeap2] Random stress test against std::priority_queue..." << std::endl;
+    std::cout << "[Test PairHeap] Random stress test against std::priority_queue..." << std::endl;
     using KeyType = std::pair<int, int>;
-    PairHeap2<KeyType, int> pair_heap;
+    PairHeap<KeyType, int> pair_heap;
     std::priority_queue<KeyType, std::vector<KeyType>, std::greater<KeyType>> pq;
 
     std::mt19937 rng(1337);
     const int NUM_OPS = 20000;
     std::vector<int> active_ids;
     std::vector<int> current_priority(NUM_OPS + 10, 0);
-    std::vector<PairHeap2<KeyType, int>::Node*> nodes(NUM_OPS + 10, nullptr);
+    std::vector<PairHeap<KeyType, int>::Node*> nodes(NUM_OPS + 10, nullptr);
     std::vector<int> values(NUM_OPS + 10, 0);
     int next_id = 1;
 
@@ -247,7 +247,7 @@ void test_random_stress_unique_keys() {
     }
 
     assert(pair_heap.validate_invariants());
-    std::cout << "[Test PairHeap2] Random stress test PASSED (" << NUM_OPS << " operations)!" << std::endl;
+    std::cout << "[Test PairHeap] Random stress test PASSED (" << NUM_OPS << " operations)!" << std::endl;
 }
 
 int main() {
@@ -256,6 +256,6 @@ int main() {
     test_decrease_key();
     test_erase_arbitrary();
     test_random_stress_unique_keys();
-    std::cout << "\n>>> ALL PAIRING HEAP 2 TESTS PASSED SUCCESSFULLY! <<<\n" << std::endl;
+    std::cout << "\n>>> ALL PAIRING HEAP TESTS PASSED SUCCESSFULLY! <<<\n" << std::endl;
     return 0;
 }

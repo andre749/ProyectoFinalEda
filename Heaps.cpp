@@ -2,33 +2,12 @@
 // Created by andre on 11/11/26.
 //
 #include <iostream>
+#include "FibonacciHeap.cpp"
 #include "HollowHeap.cpp"
 #include "PairHeap.cpp"
-#include "FibonacciHeap.cpp"
-#include "HollowHeap2.cpp"
 #include "RankPairingHeap.cpp"
-#include "PairHeap2.cpp"
+
 using namespace std;
-
-void hollow_heap_basic_test() {
-    HollowHeap<int,int> h;
-    int a[20];
-    HollowHeap<int,int>::Node* ptrs[20];
-    for (int i=19;i>=0;i--) {
-        a[i]=i;
-        ptrs[i]=h.insert(i,&a[i]);
-    }
-    h.erase(ptrs[0]);
-    h.erase(ptrs[15]);
-
-    // h.erase(ptrs[15]);
-    // h.erase(ptrs[15]);
-
-    while (!h.empty()){
-        cout<<*h.min()<<endl;
-        h.delete_min();
-    }
-}
 
 void fibonacci_heap_basic_test() {
     cout << "\n--- Fibonacci Heap Test ---" << endl;
@@ -48,21 +27,39 @@ void fibonacci_heap_basic_test() {
     }
 }
 
-void hollow_heap2_basic_test() {
-    cout << "\n--- Hollow Heap 2 Test ---" << endl;
-    HollowHeap2<int, int> h2;
+void hollow_heap_basic_test() {
+    cout << "\n--- Hollow Heap Test ---" << endl;
+    HollowHeap<int, int> h;
     int a[20];
-    HollowHeap2<int, int>::Node* ptrs[20];
+    HollowHeap<int, int>::Node* ptrs[20];
     for (int i = 19; i >= 0; i--) {
         a[i] = i;
-        ptrs[i] = h2.insert(i, &a[i]);
+        ptrs[i] = h.insert(i, &a[i]);
     }
-    h2.erase(ptrs[0]);
-    h2.erase(ptrs[15]);
+    h.erase(ptrs[0]);
+    h.erase(ptrs[15]);
 
-    while (!h2.empty()) {
-        cout << *h2.find_min() << endl;
-        h2.erase_min();
+    while (!h.empty()) {
+        cout << *h.find_min() << endl;
+        h.erase_min();
+    }
+}
+
+void pair_heap_basic_test() {
+    cout << "\n--- Pairing Heap Test ---" << endl;
+    PairHeap<int, int> ph;
+    int a[20];
+    PairHeap<int, int>::Node* ptrs[20];
+    for (int i = 19; i >= 0; i--) {
+        a[i] = i;
+        ptrs[i] = ph.insert(i, &a[i]);
+    }
+    ph.erase(ptrs[0]);
+    ph.erase(ptrs[15]);
+
+    while (!ph.empty()) {
+        cout << *ph.find_min() << endl;
+        ph.erase_min();
     }
 }
 
@@ -84,30 +81,11 @@ void rank_pairing_heap_basic_test() {
     }
 }
 
-void pair_heap2_basic_test() {
-    cout << "\n--- Pairing Heap 2 Test ---" << endl;
-    PairHeap2<int, int> ph;
-    int a[20];
-    PairHeap2<int, int>::Node* ptrs[20];
-    for (int i = 19; i >= 0; i--) {
-        a[i] = i;
-        ptrs[i] = ph.insert(i, &a[i]);
-    }
-    ph.erase(ptrs[0]);
-    ph.erase(ptrs[15]);
-
-    while (!ph.empty()) {
-        cout << *ph.find_min() << endl;
-        ph.erase_min();
-    }
-}
-
 int main() {
-    cout << "--- Hollow Heap (Original) Test ---" << endl;
-    hollow_heap_basic_test();
     fibonacci_heap_basic_test();
-    hollow_heap2_basic_test();
+    hollow_heap_basic_test();
+    pair_heap_basic_test();
     rank_pairing_heap_basic_test();
-    pair_heap2_basic_test();
     cout << "\nAll heap basic tests finished successfully." << endl;
+    return 0;
 }

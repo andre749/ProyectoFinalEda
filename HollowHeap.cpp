@@ -1,217 +1,343 @@
-//
-// Created by andre on 11/11/26.
-//
-#include <iostream> // no me dejabaa usar size t xdddddd
+#pragma once
+// Hollow Heap (multi-root con soporte para multiple decrease-key)
+#include <iostream>
 #include <vector>
+#include <array>
+#include <algorithm>
+#include <stdexcept>
+#include <limits>
+#include <cassert>
+
 using namespace std;
-template<typename T>
-struct List {
-    T* node;
-    List* next;
-    List(T* n):node(n),next(nullptr){}
 
-};
+template<typename Tk, typename Tv>
+class HollowHeap {
+private:
+    struct DagNode;
 
-template<typename Tk,typename Ti>
-
-struct HollowHeap {
-
+public:
+    // nodo visible para el usuario (se mantiene valido tras decrease_key)
     struct Node {
-        size_t rank;
-        List<Node>* kids;      // linked list ordered by rank in decreasing order
-        Ti* item;
         Tk key;
-        Node(Tk k,Ti* item):rank(0),kids(nullptr),item(item),key(k) {}
-         void absorb(Node* loser) {
-        rank++;
-        List<Node>* temp=kids;
-        kids=new List<Node>(loser);
-        kids->next=temp;
-        }
+        Tv* value;
+        DagNode* dag_node = nullptr;
 
-        bool is_hollow() {
-            return !item;
-        }
-
-
+        Node(Tk k, Tv* v) : key(k), value(v) {}
     };
 
+private:
+    // nodo interno del dag (puede quedar hollow)
+    struct DagNode {
+        Node* item = nullptr; // nullptr si el nodo es hueco
+        Tk key;
+        size_t rank = 0;
+        DagNode* child = nullptr;
+        DagNode* next = nullptr;
 
+        DagNode(Node* it, Tk k) : item(it), key(k) {}
+    };
 
-    List<Node>* roots, *last_root;   //circular linked list pointing to the minimun nodes
-    size_t roots_number;
+    DagNode* min_root = nullptr;
+    size_t n = 0;
 
-    HollowHeap():roots(nullptr),last_root(nullptr),roots_number(0){}
+    static constexpr size_t MAX_RANK = 128;
 
-    Node* _ranked_link(Node* a, Node* b) {
-        if (!a) return b;
-        if (!b) return a;
-        if (a->rank!=b->rank) {
-            cout<<"Ranked link entre nodos de diferentes rangos";
-            return nullptr;
-        }
-        if (a->key<b->key) {
-            a->absorb(b);
-            return a;
-        }
-        b->absorb(a);
-        return b;
+    // enlace de dos raices del mismo rango
+    static DagNode* link(DagNode* u, DagNode* v) {
+        if (v->key < u->key) swap(u, v);
+        v->next = u->child;
+        u->child = v;
+        u->rank++;
+        return u;
     }
-    void _insert_root(Node* root) {
-        if (root->is_hollow()) {
-            auto current_kid=root->kids;
-            while (current_kid) {
-                auto prev=current_kid;
-                _insert_root(current_kid->node);
-                current_kid=current_kid->next;
-                delete prev;
+
+    // agrega una raiz a la lista circular
+    void add_root(DagNode* r) {
+        if (!min_root) {
+            min_root = r;
+            min_root->next = min_root;
+        } else {
+            r->next = min_root->next;
+            min_root->next = r;
+            if (r->key < min_root->key) min_root = r;
+        }
+    }
+
+    bool validate_tree(DagNode* u, size_t& live_count) const {
+        if (u->item) {
+            live_count++;
+            if (u->item->dag_node != u) return false;
+            if (u->item->key != u->key) return false;
+        }
+
+        DagNode* c = u->child;
+        while (c) {
+            if (c->key < u->key) return false;
+            if (!validate_tree(c, live_count)) return false;
+            c = c->next;
+        }
+        return true;
+    }
+
+public:
+    HollowHeap() = default;
+
+    HollowHeap(const HollowHeap&) = delete;
+    HollowHeap& operator=(const HollowHeap&) = delete;
+
+    HollowHeap(HollowHeap&& other) noexcept : min_root(other.min_root), n(other.n) {
+        other.min_root = nullptr;
+        other.n = 0;
+    }
+
+    HollowHeap& operator=(HollowHeap&& other) noexcept {
+        if (this != &other) {
+            clear();
+            min_root = other.min_root;
+            n = other.n;
+            other.min_root = nullptr;
+            other.n = 0;
+        }
+        return *this;
+    }
+
+    ~HollowHeap() { clear(); }
+
+    bool empty() const { return min_root == nullptr; }
+    size_t size() const { return n; }
+
+    Tv* find_min() const {
+        return (min_root && min_root->item) ? min_root->item->value : nullptr;
+    }
+    Tv* get_min() const { return find_min(); }
+
+    Node* min_node() const {
+        return min_root ? min_root->item : nullptr;
+    }
+    Node* min_node_handle() const {
+        return min_node();
+    }
+
+    Tk min_key() const {
+        if (!min_root || !min_root->item) throw runtime_error("cola vacia");
+        return min_root->key;
+    }
+
+    Node* insert(Tk key, Tv* value = nullptr) {
+        Node* handle = new Node(key, value);
+        DagNode* u = new DagNode(handle, key);
+        handle->dag_node = u;
+        add_root(u);
+        n++;
+        return handle;
+    }
+
+    void meld(HollowHeap& other) {
+        if (!other.min_root) return;
+        if (!min_root) {
+            min_root = other.min_root;
+            n = other.n;
+        } else {
+            DagNode* next1 = min_root->next;
+            DagNode* next2 = other.min_root->next;
+            min_root->next = next2;
+            other.min_root->next = next1;
+            if (other.min_root->key < min_root->key) {
+                min_root = other.min_root;
             }
-            return;
+            n += other.n;
         }
-
-        auto ln=new List<Node>(root);
-        roots_number++;
-        if (roots_number==1) {
-            roots=ln;
-            roots->next=roots;
-            last_root=ln;
-            return;
-        }
-        if (root->key<roots->node->key) {
-            ln->next=roots;
-            roots=ln;
-            last_root->next=ln;
-            return;
-        }
-        last_root->next=ln;
-        ln->next=roots;
-        last_root=ln;
-
+        other.min_root = nullptr;
+        other.n = 0;
     }
 
-    Node* insert(Tk key,Ti* item) {
-        auto node=new Node(key,item);
-        _insert_root(node);
-        return node;
-    }
+    Tv* erase_min() {
+        if (!min_root) return nullptr;
 
-    Ti* min() {
-        return roots->node->item;
-    }
+        Node* min_item = min_root->item;
+        Tv* val = min_item ? min_item->value : nullptr;
+        if (min_item) delete min_item;
+        min_root->item = nullptr; // queda hueco
+        n--;
 
-    bool empty() const {
-        return roots_number==0;
-    }
+        // 1. juntamos todas las raices
+        vector<DagNode*> L;
+        DagNode* curr = min_root;
+        do {
+            DagNode* nxt = curr->next;
+            curr->next = nullptr;
+            L.push_back(curr);
+            curr = nxt;
+        } while (curr != min_root && curr != nullptr);
 
-    HollowHeap* pop_root(List<Node>*prev,List<Node>* root) {
-        //root->node->item=nullptr;
-        auto new_hh=new HollowHeap();
-        new_hh->_insert_root(root->node);
-
-        roots_number--;
-        prev->next=root->next;
-        if (root==roots) roots=root->next;
-        if (root==last_root) last_root=prev;
-        delete root->node;
-        delete root;
-        return new_hh;
-    }
-
-    void recursive_insert_in_vector(vector<Node*> &v,Node* node) {
-        auto rank=node->rank;
-        if (rank>=v.capacity())v.resize(rank+1);
-        if (v[rank]) {
-            recursive_insert_in_vector(v,_ranked_link(v[rank],node));
-            v[rank]=nullptr;
-            return;
-        }
-        v[rank]=node;
-        //_insert_root(node);
-    }
-    void delete_min() {
-        auto it=roots,
-        old_last=last_root
-        , prev=last_root;
-        roots->node->item=nullptr;
-        vector<HollowHeap*> heaps;
-        //heaps.push_back(this);
-        while (it!=old_last) {   //elimino todas las roots hollows
-            if (it->node->is_hollow()) {
-                heaps.push_back(pop_root(prev,it));
-                it=prev->next;
-            }else {
-                prev=it;
-                it=it->next;
+        // 2. desmantelamos las raices huecas
+        vector<DagNode*> live_roots;
+        for (size_t i = 0; i < L.size(); ++i) {
+            DagNode* u = L[i];
+            if (!u->item) {
+                // sus hijos suben a raices y borramos el nodo hueco
+                DagNode* c = u->child;
+                while (c) {
+                    DagNode* nxt_c = c->next;
+                    c->next = nullptr;
+                    L.push_back(c);
+                    c = nxt_c;
+                }
+                delete u;
+            } else {
+                live_roots.push_back(u);
             }
         }
 
-        for (auto heap:heaps) meld(heap);
-        vector<Node*> v(roots_number,nullptr);
-
-         it=roots;
-         recursive_insert_in_vector(v,last_root->node);
-        old_last=last_root;
-
-        int cont=1;
-        while (it!=last_root) {
-            recursive_insert_in_vector(v,it->node);
-            prev=it;
-            it=it->next;
-            delete prev;
-            cont++;
+        if (live_roots.empty()) {
+            min_root = nullptr;
+            return val;
         }
-        roots=nullptr;
-        last_root=nullptr;
-        roots_number=0;
 
-        delete old_last;
-        for (auto n:v) if (n) _insert_root(n);
+        // 3. enlazamos por rango con cubetas
+        array<DagNode*, MAX_RANK> A;
+        A.fill(nullptr);
+        size_t max_r = 0;
 
+        for (DagNode* u : live_roots) {
+            size_t r = u->rank;
+            while (r < MAX_RANK && A[r] != nullptr) {
+                DagNode* v = A[r];
+                A[r] = nullptr;
+                u = link(u, v);
+                r++;
+            }
+            if (r < MAX_RANK) {
+                A[r] = u;
+                if (r > max_r) max_r = r;
+            }
+        }
+
+        // 4. reconstruimos la lista circular con el nuevo minimo
+        min_root = nullptr;
+        for (size_t r = 0; r <= max_r; ++r) {
+            if (!A[r]) continue;
+            DagNode* u = A[r];
+            if (!min_root) {
+                min_root = u;
+                min_root->next = min_root;
+            } else {
+                u->next = min_root->next;
+                min_root->next = u;
+                if (u->key < min_root->key) min_root = u;
+            }
+        }
+
+        return val;
     }
 
-    void meld(HollowHeap* other) {
-        if (!other or other->roots_number==0) return ;
-        roots_number+=other->roots_number;
-        last_root->next=other->roots;
-        other->last_root->next=roots;
-        if (roots->node->key<other->roots->node->key) {
-            last_root=other->last_root;
-        }else {
-           roots=other->roots;
-        }
-        delete other;
-    }
+    Tv* extract_min() { return erase_min(); }
+    Tv* delete_min()  { return erase_min(); }
 
-    void erase(Node* node) {
-        if (node==roots->node) {
-            return delete_min();
+    void decrease_key(Node* handle, Tk new_key) {
+        if (!handle) return;
+        if (new_key > handle->key) {
+            throw invalid_argument("la llave nueva es mayor que la actual");
         }
-        node->item=nullptr;
-    }
+        handle->key = new_key;
+        DagNode* u = handle->dag_node;
+        if (!u) return;
 
-    void decrease_key(Node* node, Tk delta) {
-        if (delta<0) {
-            cout<<"Tienes que decrementar un valor positivo de la llave/n";
+        // si ya es el minimo se actualiza directo
+        if (u == min_root) {
+            u->key = new_key;
             return;
         }
-        auto new_node=new Node(node->key-delta,node->item);
-        node->item=nullptr;
-        auto cutting_point=node->kids;
-        if (cutting_point) {
-            cutting_point=cutting_point->next;
+
+        // se crea un nuevo nodo vivo y el viejo queda hueco
+        DagNode* v = new DagNode(handle, new_key);
+        handle->dag_node = v;
+        u->item = nullptr;
+
+        if (u->rank > 2 && u->child && u->child->next) {
+            v->rank = u->rank - 2;
+            v->child = u->child->next->next;
+            u->child->next->next = nullptr;
+            u->rank = 2;
+        } else {
+            v->rank = 0;
+            v->child = nullptr;
         }
-        if (cutting_point) {
-            new_node->kids=cutting_point->next;
-            cutting_point->next=nullptr;
-        }
-        if (new_node->kids) {
-            new_node->rank=1+new_node->kids->node->rank;
-        }
-        _insert_root(new_node);
+
+        add_root(v);
     }
 
+    void decrease_key_delta(Node* handle, Tk delta) {
+        if (delta < 0) throw invalid_argument("delta no puede ser negativo");
+        decrease_key(handle, handle->key - delta);
+    }
 
+    void erase(Node* handle) {
+        if (!handle || !min_root) return;
+        if (handle->dag_node == min_root) {
+            erase_min();
+            return;
+        }
+        // marcado perezoso como hueco
+        DagNode* u = handle->dag_node;
+        if (u) u->item = nullptr;
+        delete handle;
+        n--;
+    }
+
+    void clear() {
+        if (!min_root) return;
+
+        vector<DagNode*> st;
+        DagNode* curr = min_root;
+        do {
+            DagNode* nxt = curr->next;
+            curr->next = nullptr;
+            st.push_back(curr);
+            curr = nxt;
+        } while (curr != min_root && curr != nullptr);
+
+        while (!st.empty()) {
+            DagNode* u = st.back();
+            st.pop_back();
+
+            DagNode* c = u->child;
+            while (c) {
+                DagNode* nxt_c = c->next;
+                c->next = nullptr;
+                st.push_back(c);
+                c = nxt_c;
+            }
+
+            if (u->item) {
+                delete u->item;
+                u->item = nullptr;
+            }
+            delete u;
+        }
+
+        min_root = nullptr;
+        n = 0;
+    }
+
+    bool validate_invariants() const {
+        if (n == 0) return min_root == nullptr;
+        if (!min_root || !min_root->item) return false;
+        if (min_root->key != min_root->item->key) return false;
+
+        size_t live_count = 0;
+        vector<DagNode*> roots;
+        DagNode* curr = min_root;
+        do {
+            roots.push_back(curr);
+            if (curr->item && curr->key < min_root->key) return false;
+            curr = curr->next;
+        } while (curr != min_root && curr != nullptr);
+
+        for (DagNode* r : roots) {
+            if (!validate_tree(r, live_count)) return false;
+        }
+
+        return live_count == n;
+    }
 };
-
-
-

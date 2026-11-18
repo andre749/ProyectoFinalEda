@@ -4,11 +4,11 @@
 #include <random>
 #include <cassert>
 #include <algorithm>
-#include "../HollowHeap2.cpp"
+#include "../HollowHeap.cpp"
 
 void test_basic() {
-    std::cout << "[Test Hollow2] Basic operations..." << std::endl;
-    HollowHeap2<int, int> h;
+    std::cout << "[Test Hollow] Basic operations..." << std::endl;
+    HollowHeap<int, int> h;
     assert(h.empty());
     assert(h.size() == 0);
     assert(h.find_min() == nullptr);
@@ -47,12 +47,12 @@ void test_basic() {
     assert(h.find_min() == nullptr);
     assert(h.validate_invariants());
 
-    std::cout << "[Test Hollow2] Basic operations PASSED!" << std::endl;
+    std::cout << "[Test Hollow] Basic operations PASSED!" << std::endl;
 }
 
 void test_meld() {
-    std::cout << "[Test Hollow2] Meld operations..." << std::endl;
-    HollowHeap2<int, int> h1, h2;
+    std::cout << "[Test Hollow] Meld operations..." << std::endl;
+    HollowHeap<int, int> h1, h2;
     int a = 15, b = 25, c = 5, d = 30;
     h1.insert(15, &a);
     h1.insert(25, &b);
@@ -78,19 +78,19 @@ void test_meld() {
     assert(extracted == expected);
 
     // Meld on empty heap (previously crashed in HollowHeap.cpp)
-    HollowHeap2<int, int> empty1, h3;
+    HollowHeap<int, int> empty1, h3;
     int e = 100;
     h3.insert(100, &e);
     empty1.meld(h3);
     assert(empty1.size() == 1);
     assert(*empty1.find_min() == 100);
 
-    std::cout << "[Test Hollow2] Meld operations PASSED!" << std::endl;
+    std::cout << "[Test Hollow] Meld operations PASSED!" << std::endl;
 }
 
 void test_repeated_decrease_key() {
-    std::cout << "[Test Hollow2] Repeated decrease_key on same handle..." << std::endl;
-    HollowHeap2<int, int> h;
+    std::cout << "[Test Hollow] Repeated decrease_key on same handle..." << std::endl;
+    HollowHeap<int, int> h;
     int val = 999;
     auto node = h.insert(100, &val);
 
@@ -118,15 +118,15 @@ void test_repeated_decrease_key() {
     assert(h.empty());
     assert(h.validate_invariants());
 
-    std::cout << "[Test Hollow2] Repeated decrease_key PASSED!" << std::endl;
+    std::cout << "[Test Hollow] Repeated decrease_key PASSED!" << std::endl;
 }
 
 void test_lazy_erase() {
-    std::cout << "[Test Hollow2] Lazy erase arbitrary nodes..." << std::endl;
-    HollowHeap2<int, int> h;
+    std::cout << "[Test Hollow] Lazy erase arbitrary nodes..." << std::endl;
+    HollowHeap<int, int> h;
     const int N = 20;
     std::vector<int> vals(N);
-    std::vector<HollowHeap2<int, int>::Node*> nodes(N);
+    std::vector<HollowHeap<int, int>::Node*> nodes(N);
 
     for (int i = 0; i < N; ++i) {
         vals[i] = i * 10;
@@ -154,20 +154,20 @@ void test_lazy_erase() {
         assert(h.validate_invariants());
     }
 
-    std::cout << "[Test Hollow2] Lazy erase PASSED!" << std::endl;
+    std::cout << "[Test Hollow] Lazy erase PASSED!" << std::endl;
 }
 
 void test_random_stress_unique_keys() {
-    std::cout << "[Test Hollow2] Random stress test against std::priority_queue..." << std::endl;
+    std::cout << "[Test Hollow] Random stress test against std::priority_queue..." << std::endl;
     using KeyType = std::pair<int, int>;
-    HollowHeap2<KeyType, int> hollow_heap;
+    HollowHeap<KeyType, int> hollow_heap;
     std::priority_queue<KeyType, std::vector<KeyType>, std::greater<KeyType>> pq;
 
     std::mt19937 rng(42);
     const int NUM_OPS = 10000;
     std::vector<int> active_ids;
     std::vector<int> current_priority(NUM_OPS + 10, 0);
-    std::vector<HollowHeap2<KeyType, int>::Node*> nodes(NUM_OPS + 10, nullptr);
+    std::vector<HollowHeap<KeyType, int>::Node*> nodes(NUM_OPS + 10, nullptr);
     std::vector<int> values(NUM_OPS + 10, 0);
     int next_id = 1;
 
@@ -226,7 +226,7 @@ void test_random_stress_unique_keys() {
     }
 
     assert(hollow_heap.validate_invariants());
-    std::cout << "[Test Hollow2] Random stress test PASSED (" << NUM_OPS << " operations)!" << std::endl;
+    std::cout << "[Test Hollow] Random stress test PASSED (" << NUM_OPS << " operations)!" << std::endl;
 }
 
 int main() {
@@ -235,6 +235,6 @@ int main() {
     test_repeated_decrease_key();
     test_lazy_erase();
     test_random_stress_unique_keys();
-    std::cout << "\n>>> ALL HOLLOW HEAP 2 TESTS PASSED SUCCESSFULLY! <<<\n" << std::endl;
+    std::cout << "\n>>> ALL HOLLOW HEAP TESTS PASSED SUCCESSFULLY! <<<\n" << std::endl;
     return 0;
 }

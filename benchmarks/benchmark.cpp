@@ -1,6 +1,6 @@
 //
 // Suite de Benchmarking Experimental para Colas de Prioridad
-// Comparación entre FibonacciHeap, HollowHeap2, PairHeap2 y RankPairingHeap
+// Comparación entre FibonacciHeap, HollowHeap, PairHeap y RankPairingHeap
 //
 #include <iostream>
 #include <iomanip>
@@ -10,8 +10,8 @@
 #include <cassert>
 
 #include "../FibonacciHeap.cpp"
-#include "../HollowHeap2.cpp"
-#include "../PairHeap2.cpp"
+#include "../HollowHeap.cpp"
+#include "../PairHeap.cpp"
 #include "../RankPairingHeap.cpp"
 
 #include "Graph.hpp"
@@ -24,12 +24,12 @@ struct BenchmarkRow {
     int V;
     size_t E;
     double fib_time;
-    double hollow2_time;
-    double pair2_time;
+    double hollow_time;
+    double pair_time;
     double rp_time;
     size_t dec_keys_fib;
-    size_t dec_keys_hollow2;
-    size_t dec_keys_pair2;
+    size_t dec_keys_hollow;
+    size_t dec_keys_pair;
     size_t dec_keys_rp;
 };
 
@@ -42,63 +42,63 @@ void run_test_case(const std::string& name, const Graph<int>& G, std::vector<Ben
     {
         std::cout << "  Ejecutando Dijkstra..." << std::flush;
         auto res_fib  = GraphAlgorithms<FibonacciHeap<int, int>>::dijkstra(G, 0);
-        auto res_hh2  = GraphAlgorithms<HollowHeap2<int, int>>::dijkstra(G, 0);
-        auto res_ph2  = GraphAlgorithms<PairHeap2<int, int>>::dijkstra(G, 0);
+        auto res_hh   = GraphAlgorithms<HollowHeap<int, int>>::dijkstra(G, 0);
+        auto res_ph   = GraphAlgorithms<PairHeap<int, int>>::dijkstra(G, 0);
         auto res_rp   = GraphAlgorithms<RankPairingHeap<int, int>>::dijkstra(G, 0);
         std::cout << " OK!" << std::endl;
 
         // Validar coherencia algorítmica exacta: todas deben producir la misma suma de distancias
-        assert(res_fib.checksum == res_hh2.checksum);
-        assert(res_fib.checksum == res_ph2.checksum);
+        assert(res_fib.checksum == res_hh.checksum);
+        assert(res_fib.checksum == res_ph.checksum);
         assert(res_fib.checksum == res_rp.checksum);
 
         std::cout << std::fixed << std::setprecision(2);
         std::cout << "    [Dijkstra] Fib: " << res_fib.time_ms << " ms | "
-                  << "Hollow2: " << res_hh2.time_ms << " ms | "
-                  << "Pair2: " << res_ph2.time_ms << " ms | "
+                  << "Hollow: " << res_hh.time_ms << " ms | "
+                  << "Pair: " << res_ph.time_ms << " ms | "
                   << "RankPairing: " << res_rp.time_ms << " ms | "
                   << "Checksum: " << res_fib.checksum << std::endl;
 
         results.push_back({"Dijkstra", name, G.V(), G.E(),
-                           res_fib.time_ms, res_hh2.time_ms, res_ph2.time_ms, res_rp.time_ms,
-                           res_fib.decrease_key_count, res_hh2.decrease_key_count,
-                           res_ph2.decrease_key_count, res_rp.decrease_key_count});
+                           res_fib.time_ms, res_hh.time_ms, res_ph.time_ms, res_rp.time_ms,
+                           res_fib.decrease_key_count, res_hh.decrease_key_count,
+                           res_ph.decrease_key_count, res_rp.decrease_key_count});
 
         csv << "Dijkstra," << name << "," << G.V() << "," << G.E() << ","
-            << res_fib.time_ms << "," << res_hh2.time_ms << "," << res_ph2.time_ms << "," << res_rp.time_ms << ","
-            << res_fib.decrease_key_count << "," << res_hh2.decrease_key_count << ","
-            << res_ph2.decrease_key_count << "," << res_rp.decrease_key_count << "\n";
+            << res_fib.time_ms << "," << res_hh.time_ms << "," << res_ph.time_ms << "," << res_rp.time_ms << ","
+            << res_fib.decrease_key_count << "," << res_hh.decrease_key_count << ","
+            << res_ph.decrease_key_count << "," << res_rp.decrease_key_count << "\n";
     }
 
     // --- 2. PRIM (MST) ---
     {
         std::cout << "  Ejecutando Prim..." << std::flush;
         auto res_fib  = GraphAlgorithms<FibonacciHeap<int, int>>::prim(G);
-        auto res_hh2  = GraphAlgorithms<HollowHeap2<int, int>>::prim(G);
-        auto res_ph2  = GraphAlgorithms<PairHeap2<int, int>>::prim(G);
+        auto res_hh   = GraphAlgorithms<HollowHeap<int, int>>::prim(G);
+        auto res_ph   = GraphAlgorithms<PairHeap<int, int>>::prim(G);
         auto res_rp   = GraphAlgorithms<RankPairingHeap<int, int>>::prim(G);
         std::cout << " OK!" << std::endl;
 
         // Validar coherencia del peso del MST exacto
-        assert(res_fib.checksum == res_hh2.checksum);
-        assert(res_fib.checksum == res_ph2.checksum);
+        assert(res_fib.checksum == res_hh.checksum);
+        assert(res_fib.checksum == res_ph.checksum);
         assert(res_fib.checksum == res_rp.checksum);
 
         std::cout << "    [Prim]     Fib: " << res_fib.time_ms << " ms | "
-                  << "Hollow2: " << res_hh2.time_ms << " ms | "
-                  << "Pair2: " << res_ph2.time_ms << " ms | "
+                  << "Hollow: " << res_hh.time_ms << " ms | "
+                  << "Pair: " << res_ph.time_ms << " ms | "
                   << "RankPairing: " << res_rp.time_ms << " ms | "
                   << "MST-Weight: " << res_fib.checksum << std::endl;
 
         results.push_back({"Prim", name, G.V(), G.E(),
-                           res_fib.time_ms, res_hh2.time_ms, res_ph2.time_ms, res_rp.time_ms,
-                           res_fib.decrease_key_count, res_hh2.decrease_key_count,
-                           res_ph2.decrease_key_count, res_rp.decrease_key_count});
+                           res_fib.time_ms, res_hh.time_ms, res_ph.time_ms, res_rp.time_ms,
+                           res_fib.decrease_key_count, res_hh.decrease_key_count,
+                           res_ph.decrease_key_count, res_rp.decrease_key_count});
 
         csv << "Prim," << name << "," << G.V() << "," << G.E() << ","
-            << res_fib.time_ms << "," << res_hh2.time_ms << "," << res_ph2.time_ms << "," << res_rp.time_ms << ","
-            << res_fib.decrease_key_count << "," << res_hh2.decrease_key_count << ","
-            << res_ph2.decrease_key_count << "," << res_rp.decrease_key_count << "\n";
+            << res_fib.time_ms << "," << res_hh.time_ms << "," << res_ph.time_ms << "," << res_rp.time_ms << ","
+            << res_fib.decrease_key_count << "," << res_hh.decrease_key_count << ","
+            << res_ph.decrease_key_count << "," << res_rp.decrease_key_count << "\n";
     }
 }
 
@@ -109,7 +109,7 @@ int main() {
 
     std::vector<BenchmarkRow> results;
     std::ofstream csv("benchmarks/benchmark_results.csv");
-    csv << "Algorithm,GraphType,V,E,FibonacciHeap_ms,HollowHeap2_ms,PairHeap2_ms,RankPairingHeap_ms,DecKeys_Fib,DecKeys_Hollow2,DecKeys_Pair2,DecKeys_RP\n";
+    csv << "Algorithm,GraphType,V,E,FibonacciHeap_ms,HollowHeap_ms,PairHeap_ms,RankPairingHeap_ms,DecKeys_Fib,DecKeys_Hollow,DecKeys_Pair,DecKeys_RP\n";
 
     // 1. Grafos Conexos Dispersos Pequeños y Medianos
     {
@@ -148,7 +148,7 @@ int main() {
     std::cout << "### TABLA RESUMEN DE TIEMPOS DE EJECUCIÓN (ms)\n";
     std::cout << "========================================================================================\n\n";
 
-    std::cout << "| Algoritmo | Instancia de Grafo | |V| | |E| | Fibonacci (ms) | Hollow 2 (ms) | Pairing 2 (ms) | Rank-Pairing (ms) |\n";
+    std::cout << "| Algoritmo | Instancia de Grafo | |V| | |E| | Fibonacci (ms) | Hollow (ms) | Pairing (ms) | Rank-Pairing (ms) |\n";
     std::cout << "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |\n";
 
     for (const auto& r : results) {
@@ -157,8 +157,8 @@ int main() {
                   << " | " << r.V
                   << " | " << r.E
                   << " | " << std::fixed << std::setprecision(2) << r.fib_time
-                  << " | " << r.hollow2_time
-                  << " | " << r.pair2_time
+                  << " | " << r.hollow_time
+                  << " | " << r.pair_time
                   << " | " << r.rp_time
                   << " |\n";
     }
